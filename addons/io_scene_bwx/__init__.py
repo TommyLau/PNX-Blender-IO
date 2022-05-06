@@ -109,29 +109,26 @@ class ImportBWX(Operator, ImportHelper):
             return self.unit_import(self.filepath, import_settings)
 
     def unit_import(self, filename, import_settings):
-        # from .io.imp.bwx_io import BWXImporter, ImportError
-        # from .blender.imp.bwx_blender import BlenderBWX
+        import time
+        from .io.bwx import BWXImporter, ImportError
 
-        # try:
-        #     bwx_importer = BWXImporter(filename, import_settings)
-        #     bwx_importer.read()
-        #     bwx_importer.checks()
-        #
-        #     print("Data are loaded, start creating Blender stuff")
-        #
-        #     start_time = time.time()
-        #     BlenderBWX.create(bwx_importer)
-        #     elapsed_s = "{:.2f}s".format(time.time() - start_time)
-        #     print("BWX import finished in " + elapsed_s)
-        #
-        #     bwx_importer.log.removeHandler(bwx_importer.log_handler)
-        #
-        #     return {'FINISHED'}
-        #
-        # except ImportError as e:
-        #     self.report({'ERROR'}, e.args[0])
-        #     return {'CANCELLED'}
-        return {'FINISHED'}
+        try:
+            bwx_importer = BWXImporter(filename, import_settings)
+            bwx_importer.read()
+            bwx_importer.checks()
+
+            print("Data are loaded, start creating Blender stuff")
+
+            start_time = time.time()
+            # BlenderBWX.create(bwx_importer)
+            elapsed_s = "{:.2f}s".format(time.time() - start_time)
+            print("BWX import finished in " + elapsed_s)
+
+            return {'FINISHED'}
+
+        except ImportError as e:
+            self.report({'ERROR'}, e.args[0])
+            return {'CANCELLED'}
 
     def set_debug_log(self):
         import logging
