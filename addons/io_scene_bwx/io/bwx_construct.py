@@ -1,9 +1,6 @@
 import struct
 
-if "bpy" in locals():
-    from ..construct import *
-else:
-    from construct import *
+from ..construct import *
 
 
 def singleton(arg):
@@ -144,33 +141,38 @@ bwx_value = Struct(
     })),
 )
 
-bwx_main_block = Struct(
-    "name" / Prefixed(VarInt, CString("utf-8")),
-    "sub_block" / bwx_value,
+# ------------------------------------------------------------
+# 0
+# ------------------------------------------------------------
+bwx_0_struct = Struct(
+    "signature" / Const(bwx_value.build(dict(type=SL_STRING, data="SLBWX"))),  # SLBWX
 )
+# ------------------------------------------------------------
+# 0 - END
+# ------------------------------------------------------------
 
-bwx_file = Struct(
-    "signature" / Const(b"BWXF"),
-    "content_size" / VarInt,  # File content size, remove BWX header and end ("FXWB"), 7 + 4 Bytes
-    "block_count" / VarInt,  # How many blocks
-    "block" / Array(this.block_count, bwx_main_block),
-    "ending" / Const(b"FXWB"),
-)
-
-# Process Header - HEAD
-head_header = Struct(
+# ------------------------------------------------------------
+# Header
+# ------------------------------------------------------------
+bwx_header_struct = Struct(
+    "A" / Const(b'A'),  # Array
+    "size" / VarInt,
+    "count" / VarInt,
     "name" / bwx_value,
     "description" / bwx_value,
-    # "magic" / Const(b'I\x00XNP'),
     "magic" / Const(bwx_value.build(dict(type=SL_I32, data=0x504e5800))),  # PNX
     "version_type" / Const(b'W'),
     "version" / Enum(Int16ul, SLv1=0x0500, SLv2=0x0602),
     "other" / bwx_value,
 )
+# ------------------------------------------------------------
+# Header - END
+# ------------------------------------------------------------
 
-# Process Materials
-
-texture = Struct(
+# ------------------------------------------------------------
+# Materials
+# ------------------------------------------------------------
+bwx_texture_struct = Struct(
     "A" / Const(b'A'),  # Array
     "size" / VarInt,
     "count" / VarInt,
@@ -179,7 +181,7 @@ texture = Struct(
     "filename" / bwx_value,
 )
 
-sub_material = Struct(
+bwx_sub_material_struct = Struct(
     "A" / Const(b'A'),  # Array
     "size" / VarInt,
     "count" / VarInt,
@@ -191,22 +193,30 @@ sub_material = Struct(
     "highlight" / bwx_value,
     "most_1" / bwx_value,
     "unknown" / bwx_value,
-    "filename" / If(this.count > 8, texture)
+    "filename" / If(this.count > 8, bwx_texture_struct)
 )
 
-material_header = Struct(
+bwx_material_struct = Struct(
     "A" / Const(b'A'),  # Array
     "size" / VarInt,
     "count" / VarInt,
-    "MTRL" / Const(bwx_value.build(dict(type=SL_STRING, data="MTRL"))),  # MTRL
-    "material_name" / bwx_value,
-    # "sub_material_array" / bwx_value,
-    "sub_material" / Array(this.count - 2, sub_material),
+    "material" / Array(this.count, Struct(
+        "A" / Const(b'A'),  # Array
+        "size" / VarInt,
+        "count" / VarInt,
+        "MTRL" / Const(bwx_value.build(dict(type=SL_STRING, data="MTRL"))),  # MTRL
+        "material_name" / bwx_value,
+        "sub_material" / Array(this.count - 2, bwx_sub_material_struct),
+    )),
 )
+# ------------------------------------------------------------
+# Materials - END
+# ------------------------------------------------------------
 
-# Process OBJ2
-
-matrix = Struct(
+# ------------------------------------------------------------
+# Objects - Ver1
+# ------------------------------------------------------------
+bwx_matrix_struct = Struct(
     "A" / Const(b'A'),  # Array
     "size" / VarInt,
     "count" / VarInt,
@@ -215,7 +225,7 @@ matrix = Struct(
     "matrix" / Array(this.count - 1, bwx_value),
 )
 
-sub_mesh = Struct(
+bwx_sub_mesh_struct = Struct(
     "A" / Const(b'A'),  # Array
     "size" / VarInt,
     "count" / VarInt,
@@ -226,15 +236,15 @@ sub_mesh = Struct(
     "uv_buffer" / bwx_value,  # Only the first sub mesh has UV data, others are null array
 )
 
-mesh = Struct(
+bwx_mesh_struct = Struct(
     "A" / Const(b'A'),  # Array
     "size" / VarInt,
     "count" / VarInt,
     "MESH" / Const(bwx_value.build(dict(type=SL_STRING, data="MESH"))),  # MESH
     "A" / Const(b'A'),  # Array
-    "size" / VarInt,
-    "count" / VarInt,
-    "sub_mesh" / Array(this.count, sub_mesh),
+    "sub_size" / VarInt,
+    "sub_count" / VarInt,
+    "sub_mesh" / Array(this.sub_count, bwx_sub_mesh_struct),
     "sub_material" / bwx_value,
     "index_buffer" / bwx_value,
     "unknown1" / bwx_value,
@@ -243,25 +253,59 @@ mesh = Struct(
     "unknown_20" / bwx_value,
 )
 
-object_header = Struct(
+bwx_object_struct = Struct(
     "A" / Const(b'A'),  # Array
     "size" / VarInt,
     "count" / VarInt,
-    "OBJ2" / Const(bwx_value.build(dict(type=SL_STRING, data="OBJ2"))),  # OBJ2
-    "object_name" / bwx_value,
-    "unknown1" / bwx_value,
-    "material" / bwx_value,
-    "unknown2" / bwx_value,
-    "unknown3" / bwx_value,
-    "direction" / bwx_value,
-    "A" / Const(b'A'),  # Array
-    "mesh_size" / VarInt,
-    "mesh_count" / VarInt,
-    "mesh" / Array(this.mesh_count, mesh),
-    "A" / Const(b'A'),  # Array
-    "matrix_size" / VarInt,
-    "matrix_count" / VarInt,
-    "matrix" / Array(this.matrix_count, matrix),
-    "sfx" / bwx_value,
-    "whatisthis" / If(this.count > 10, bwx_value),
+    "object" / Array(this.count, Struct(
+        "A" / Const(b'A'),  # Array
+        "size" / VarInt,
+        "count" / VarInt,
+        "OBJ2" / Const(bwx_value.build(dict(type=SL_STRING, data="OBJ2"))),  # OBJ2
+        "name" / bwx_value,
+        "unknown1" / bwx_value,
+        "material" / bwx_value,
+        "unknown2" / bwx_value,
+        "unknown3" / bwx_value,
+        "direction" / bwx_value,
+        "A" / Const(b'A'),  # Array
+        "mesh_size" / VarInt,
+        "mesh_count" / VarInt,
+        "mesh" / Array(this.mesh_count, bwx_mesh_struct),
+        "A" / Const(b'A'),  # Array
+        "matrix_size" / VarInt,
+        "matrix_count" / VarInt,
+        "matrix" / Array(this.matrix_count, bwx_matrix_struct),
+        "sfx" / bwx_value,
+        "whatisthis" / If(this.count > 10, bwx_value),
+    )),
+)
+# ------------------------------------------------------------
+# Objects - END
+# ------------------------------------------------------------
+
+# BWX Main Blocks
+bwx_main_block_struct = Struct(
+    "name" / Prefixed(VarInt, CString("utf-8")),
+    "data" / Switch(this.name, {
+        "0": bwx_0_struct,
+        "HEAD": bwx_header_struct,
+        "MTRL": bwx_material_struct,
+        "OBJ2": bwx_object_struct,
+        "OBJECT": bwx_object_struct,
+        "CAM": bwx_value,  # TODO
+        "LIGHT": bwx_value,  # TODO
+        "SOUND": bwx_value,  # TODO
+        "BONE": bwx_value,  # TODO
+        "CHART": bwx_value,  # TODO
+    }, default=bwx_value),
+)
+
+# BWX File Struct
+bwx_struct = Struct(
+    "signature" / Const(b"BWXF"),
+    "content_size" / VarInt,  # File content size, remove BWX header and end ("FXWB"), 7 + 4 Bytes
+    "block_count" / VarInt,  # How many blocks
+    "block" / Array(this.block_count, bwx_main_block_struct),
+    "ending" / Const(b"FXWB"),
 )
