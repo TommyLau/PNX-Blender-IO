@@ -1,5 +1,4 @@
-import struct
-from .bwx_construct import *
+from io_scene_bwx.bwx_construct import *
 
 
 # Raise this error to have the importer report an error message.
@@ -7,7 +6,7 @@ class ImportError(RuntimeError):
     pass
 
 
-class BWXImporter():
+class BWXImporter:
     """BWX Importer class."""
 
     def __init__(self, filename, import_settings):
@@ -30,4 +29,4 @@ class BWXImporter():
             head_data = get_block(bwx, "HEAD")
 
             if head_data:
-                print(head_data.data.version)
+                print(head_data.version)

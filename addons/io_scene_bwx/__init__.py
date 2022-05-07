@@ -51,12 +51,10 @@ if "bpy" in locals():
 
 import bpy
 from bpy.props import (StringProperty,
-                       BoolProperty,
-                       EnumProperty,
                        IntProperty,
                        CollectionProperty)
 from bpy.types import Operator
-from bpy_extras.io_utils import ImportHelper, ExportHelper
+from bpy_extras.io_utils import ImportHelper
 
 
 #
@@ -110,7 +108,8 @@ class ImportBWX(Operator, ImportHelper):
 
     def unit_import(self, filename, import_settings):
         import time
-        from .io.bwx import BWXImporter, ImportError
+        from io_scene_bwx.bwx_io import BWXImporter, ImportError
+        from io_scene_bwx.bwx_blender import BlenderBWX
 
         try:
             bwx_importer = BWXImporter(filename, import_settings)
@@ -120,7 +119,7 @@ class ImportBWX(Operator, ImportHelper):
             print("Data are loaded, start creating Blender stuff")
 
             start_time = time.time()
-            # BlenderBWX.create(bwx_importer)
+            BlenderBWX.create(bwx_importer)
             elapsed_s = "{:.2f}s".format(time.time() - start_time)
             print("BWX import finished in " + elapsed_s)
 

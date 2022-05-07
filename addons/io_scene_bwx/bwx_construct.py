@@ -1,5 +1,5 @@
 import struct
-from ..construct import *
+from io_scene_bwx.construct import *
 # from construct import *
 
 
@@ -82,7 +82,7 @@ def SInt16sl():
 
 
 def get_block(bwx, name):
-    a = [b for b in bwx.block if b.name == name]
+    a = [b.data for b in bwx.block if b.name == name]
     return a[0] if len(a) > 0 else None
 
 
