@@ -1,5 +1,7 @@
 import struct
 from io_scene_bwx.construct import *
+
+
 # from construct import *
 
 
@@ -128,17 +130,17 @@ bwx_value = Struct(
     "type" / Byte,
     "data" / IfThenElse(this.type > 0x80, Bytes(this.type & 0x7f), Switch(this.type, {
         0x41: bwx_array,
-        0x44: bwx_darray,
-        0x53: Prefixed(VarInt, CString("euc-kr")),
-        0x59: Byte,
+        0x42: Prefixed(VarInt, GreedyBytes),
         0x43: SByte,
-        0x57: Int16ul,
+        0x44: bwx_darray,
+        0x46: Float32l,
         0x48: SInt16sl,
         0x49: Int32sl,
-        0x46: Float32l,
-        0x42: VarInt,
-        0x80: Bytes(this.type & 0x7f),
+        0x53: Prefixed(VarInt, CString("euc-kr")),
+        0x57: Int16ul,
+        0x59: Byte,
     })),
+    "value" / Computed(lambda this: this.type if this.type < 0x20 else this.data),
 )
 
 # ------------------------------------------------------------
@@ -295,9 +297,7 @@ bwx_dx_meshf_struct = Struct(
     "vertex_type" / bwx_value,  # Maybe, seems always = 0x15
     "vertex_count" / bwx_value,
     "vertex_size" / bwx_value,  # 0x20
-    "B" / Const(b'B'),  # VarInt
-    # "vertex_buffer_size" / bwx_value,  # (vertex_count + 2) x 32, two more unknown vertex
-    "vertex_buffer" / Prefixed(VarInt, GreedyBytes),
+    "vertex_buffer" / bwx_value,
 )
 
 bwx_dx_mesh_struct = Struct(
@@ -311,11 +311,7 @@ bwx_dx_mesh_struct = Struct(
     "sub_count" / VarInt,
     "sub_mesh" / Array(this.sub_count, bwx_dx_meshf_struct),
     "index_count" / bwx_value,
-    "index_buffer_type" / Byte,
-    "index_buffer" / IfThenElse(this.index_buffer_type > 0x80, Bytes(this.index_buffer_type & 0x7f),
-                                Switch(this.index_buffer_type, {
-                                    0x42: Prefixed(VarInt, GreedyBytes),
-                                })),
+    "index_buffer" / bwx_value,
 )
 
 bwx_dx_object_struct = Struct(
