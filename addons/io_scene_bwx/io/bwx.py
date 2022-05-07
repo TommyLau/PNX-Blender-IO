@@ -25,6 +25,7 @@ class BWXImporter():
             content = memoryview(f.read())
             # Parse PNX file
             bwx = bwx_struct.parse(content)
+            print(bwx)
 
             head_data = get_block(bwx, "HEAD")
 

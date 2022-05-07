@@ -1,6 +1,6 @@
 import struct
-
 from ..construct import *
+# from construct import *
 
 
 def singleton(arg):
@@ -214,7 +214,7 @@ bwx_material_struct = Struct(
 # ------------------------------------------------------------
 
 # ------------------------------------------------------------
-# Objects - Ver1
+# Objects
 # ------------------------------------------------------------
 bwx_matrix_struct = Struct(
     "A" / Const(b'A'),  # Array
@@ -225,7 +225,10 @@ bwx_matrix_struct = Struct(
     "matrix" / Array(this.count - 1, bwx_value),
 )
 
-bwx_sub_mesh_struct = Struct(
+# ************************************************************
+# Version 1
+# ************************************************************
+bwx_meshf_struct = Struct(
     "A" / Const(b'A'),  # Array
     "size" / VarInt,
     "count" / VarInt,
@@ -244,7 +247,7 @@ bwx_mesh_struct = Struct(
     "A" / Const(b'A'),  # Array
     "sub_size" / VarInt,
     "sub_count" / VarInt,
-    "sub_mesh" / Array(this.sub_count, bwx_sub_mesh_struct),
+    "sub_mesh" / Array(this.sub_count, bwx_meshf_struct),
     "sub_material" / bwx_value,
     "index_buffer" / bwx_value,
     "unknown1" / bwx_value,
@@ -280,6 +283,68 @@ bwx_object_struct = Struct(
         "whatisthis" / If(this.count > 10, bwx_value),
     )),
 )
+# ************************************************************
+# Version 2
+# ************************************************************
+bwx_dx_meshf_struct = Struct(
+    "A" / Const(b'A'),  # Array
+    "size" / VarInt,
+    "count" / VarInt,
+    "DXMESHF" / Const(bwx_value.build(dict(type=SL_STRING, data="DXMESHF"))),  # DXMESHF
+    "timeline" / bwx_value,
+    "vertex_type" / bwx_value,  # Maybe, seems always = 0x15
+    "vertex_count" / bwx_value,
+    "vertex_size" / bwx_value,  # 0x20
+    "B" / Const(b'B'),  # VarInt
+    # "vertex_buffer_size" / bwx_value,  # (vertex_count + 2) x 32, two more unknown vertex
+    "vertex_buffer" / Prefixed(VarInt, GreedyBytes),
+)
+
+bwx_dx_mesh_struct = Struct(
+    "A" / Const(b'A'),  # Array
+    "size" / VarInt,
+    "count" / VarInt,
+    "DXMESH" / Const(bwx_value.build(dict(type=SL_STRING, data="DXMESH"))),  # DXMESH
+    "sub_material" / bwx_value,
+    "A" / Const(b'A'),  # Array
+    "sub_size" / VarInt,
+    "sub_count" / VarInt,
+    "sub_mesh" / Array(this.sub_count, bwx_dx_meshf_struct),
+    "index_count" / bwx_value,
+    "index_buffer_type" / Byte,
+    "index_buffer" / IfThenElse(this.index_buffer_type > 0x80, Bytes(this.index_buffer_type & 0x7f),
+                                Switch(this.index_buffer_type, {
+                                    0x42: Prefixed(VarInt, GreedyBytes),
+                                })),
+)
+
+bwx_dx_object_struct = Struct(
+    "A" / Const(b'A'),  # Array
+    "size" / VarInt,
+    "count" / VarInt,
+    "object" / Array(this.count, Struct(
+        "A" / Const(b'A'),  # Array
+        "size" / VarInt,
+        "count" / VarInt,
+        "DXOBJ" / Const(bwx_value.build(dict(type=SL_STRING, data="DXOBJ"))),  # DXOBJ
+        "name" / bwx_value,
+        "unknown1" / bwx_value,
+        "material" / bwx_value,
+        "unknown2" / bwx_value,
+        "unknown3" / bwx_value,
+        "direction" / bwx_value,
+        "A" / Const(b'A'),  # Array
+        "mesh_size" / VarInt,
+        "mesh_count" / VarInt,
+        "mesh" / Array(this.mesh_count, bwx_dx_mesh_struct),
+        "A" / Const(b'A'),  # Array
+        "matrix_size" / VarInt,
+        "matrix_count" / VarInt,
+        "matrix" / Array(this.matrix_count, bwx_matrix_struct),
+        "sfx" / bwx_value,
+        "whatisthis" / If(this.count > 10, bwx_value),
+    )),
+)
 # ------------------------------------------------------------
 # Objects - END
 # ------------------------------------------------------------
@@ -298,6 +363,8 @@ bwx_main_block_struct = Struct(
         "SOUND": bwx_value,  # TODO
         "BONE": bwx_value,  # TODO
         "CHART": bwx_value,  # TODO
+        "DXOBJ": bwx_dx_object_struct,
+        "SPOB": bwx_dx_object_struct,
     }, default=bwx_value),
 )
 
