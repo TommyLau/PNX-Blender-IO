@@ -1,5 +1,5 @@
 import struct
-from .pnx_construct import *
+from .bwx_construct import *
 
 
 # Raise this error to have the importer report an error message.

@@ -1,5 +1,9 @@
 import struct
-from ..construct import *
+
+if "bpy" in locals():
+    from ..construct import *
+else:
+    from construct import *
 
 
 def singleton(arg):
@@ -84,6 +88,9 @@ def get_block(bwx, name):
     a = [b for b in bwx.block if b.name == name]
     return a[0] if len(a) > 0 else None
 
+
+# Add Korean EUC-KR support
+possiblestringencodings["euc_kr"] = 1
 
 # Signature A - 0x41
 bwx_array = Struct(
