@@ -236,8 +236,11 @@ bwx_matrix_struct = Struct(
     "size" / VarInt,
     "count" / VarInt,
     "MATRIX" / Const(bwx_value.build(dict(type=SL_STRING, data="MATRIX"))),  # MATRIX
-    # "matrix" / Array(this.count - 1, sub_matrix),
-    "matrix" / Array(this.count - 1, bwx_value),
+    "matrices" / Array(this.count - 1, Struct(
+        "type" / Const(b'\xc4'),
+        "timeline" / Int32ul,
+        "matrix" / Array(16, Float32l),
+    )),
 )
 
 # ************************************************************
@@ -249,9 +252,14 @@ bwx_meshf_struct = Struct(
     "count" / VarInt,
     "MESHF" / Const(bwx_value.build(dict(type=SL_STRING, data="MESHF"))),  # MESHF
     "timeline" / bwx_value,
-    "vertex_buffer" / bwx_value,
-    # "uv_buffer" / If(this.count > 3, bwx_value),
-    "uv_buffer" / bwx_value,  # Only the first sub mesh has UV data, others are null array
+    "A" / Const(b'A'),  # Array
+    "size" / VarInt,
+    "vertex_count" / VarInt,
+    "vertex_buffer" / Array(this.vertex_count, bwx_value),
+    "A" / Const(b'A'),  # Array
+    "size" / VarInt,
+    "uv_count" / VarInt,
+    "uv_buffer" / Array(this.uv_count, bwx_value),  # Only the first sub mesh has UV data, others are null array
 )
 
 bwx_mesh_struct = Struct(
@@ -263,8 +271,14 @@ bwx_mesh_struct = Struct(
     "sub_size" / VarInt,
     "sub_count" / VarInt,
     "sub_mesh" / Array(this.sub_count, bwx_meshf_struct),
-    "sub_material" / bwx_value,
-    "index_buffer" / bwx_value,
+    "A" / Const(b'A'),  # Array
+    "sub_material_size" / VarInt,
+    "sub_material_count" / VarInt,
+    "sub_material" / Array(this.sub_material_count, bwx_value),
+    "A" / Const(b'A'),  # Array
+    "size" / VarInt,
+    "index_count" / VarInt,
+    "index_buffer" / Array(this.index_count, bwx_value),
     "unknown1" / bwx_value,
     "unknown2" / bwx_value,
     "unknown3" / bwx_value,

@@ -29,7 +29,8 @@ class BlenderBWX:
     @staticmethod
     def prepare_data(bwx):
         """Prepare data, just before creation."""
-        pass
+        if bwx.model:
+            print(bwx.model)
 
     @staticmethod
     def find_unused_name(haystack, desired_name):
