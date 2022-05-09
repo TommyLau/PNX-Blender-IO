@@ -59,10 +59,11 @@ class BlenderBWX:
             mat[3][2] = matrix[11]
             mat[3][3] = matrix[15]
 
-            me.transform(mat)
+            # me.transform(mat)
             me.calc_normals()
             me.update()
             new_object = bpy.data.objects.new(name, me)
+            new_object.matrix_basis = mat
             bpy.context.collection.objects.link(new_object)
 
     @staticmethod
