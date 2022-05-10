@@ -68,6 +68,12 @@ class BWXImporter:
                         positions = [Array(3, Float32l).parse(v.value)[:] for v in sm.vertex_buffer]
                         tex_coords = [Array(2, Float32l).parse(u.value)[:] for u in sm.uv_buffer]
                         indices = [i.value for i in m.index_buffer]
+
+                        # Flip if direction = "MSHX"
+                        if o.direction.value == EnumIntegerString('MSHX'):
+                            for i in range(0, len(indices), 3):
+                                indices[i + 1], indices[i + 2] = indices[i + 2], indices[i + 1]
+
                         meshes.append([sub_material, positions, tex_coords, indices])
 
                     # Assume have only ONE matrix group - o.matrix[0]

@@ -125,6 +125,11 @@ bwx_darray = Struct(
     ))
 )
 
+bwx_direction = Struct(
+    "type" / Const(b'I'),
+    "value" / Enum(Int32ul, MNHX=0x4d4e4858, MSHX=0x4d534858),
+)
+
 '''
 Array = 0x41
 # VarInt = 0x42
@@ -299,7 +304,7 @@ bwx_object_struct = Struct(
         "material" / bwx_value,
         "unknown2" / bwx_value,
         "unknown3" / bwx_value,
-        "direction" / bwx_value,
+        "direction" / bwx_direction,
         "A" / Const(b'A'),  # Array
         "mesh_size" / VarInt,
         "mesh_count" / VarInt,
@@ -355,7 +360,7 @@ bwx_dx_object_struct = Struct(
         "material" / bwx_value,
         "unknown2" / bwx_value,
         "unknown3" / bwx_value,
-        "direction" / bwx_value,
+        "direction" / bwx_direction,
         "A" / Const(b'A'),  # Array
         "mesh_size" / VarInt,
         "mesh_count" / VarInt,
