@@ -14,6 +14,7 @@
 
 
 import bpy
+import pathlib
 from bpy_extras.image_utils import load_image
 from mathutils import Vector, Quaternion, Matrix
 
@@ -25,6 +26,8 @@ class BWXBlender:
         self.nodal_material_wrap_map = {}
         self.unique_materials = {}
         self.bwx = bwx
+        import_path = [p for p in pathlib.Path(bwx.filename).parents if p.stem == "Graphic"]
+        self.import_path = str(import_path[0].resolve()) if import_path else ''
 
     def create(self):
         """Create BWX main worker method."""
@@ -77,8 +80,7 @@ class BWXBlender:
 
     def prepare_data(self):
         """Prepare data, just before creation."""
-        # print(self.bwx.materials)
-        pass
+        print(self.import_path)
 
     def create_material(self, material, sub_material):
         from bpy_extras import node_shader_utils
@@ -97,7 +99,7 @@ class BWXBlender:
             ma_wrap.use_nodes = True
 
             [_, _, _, _, texture_file] = materials[sub_material]
-            img = load_image(texture_file, verbose=True, check_existing=True)
+            img = load_image(texture_file, self.import_path, recursive=True, verbose=True, check_existing=True)
 
             # Add texture for material
             ma_wrap.base_color_texture.image = img
