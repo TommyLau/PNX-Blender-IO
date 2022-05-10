@@ -105,6 +105,11 @@ class BWXBlender:
             ma_wrap.base_color_texture.image = img
             ma_wrap.base_color_texture.texcoords = 'UV'
 
+            # Add alpha blending if the texture is 32bits
+            if img.depth == 32:
+                ma_wrap.alpha_texture.image = img
+                ma_wrap.alpha_texture.texcoords = 'UV'
+
             context_material = ma
             context_mat_wrap = ma_wrap
 
