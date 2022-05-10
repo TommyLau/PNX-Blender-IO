@@ -27,12 +27,12 @@ class BlenderBWX:
 
         for o in bwx.model:
             [name, material, meshes, matrices] = o
-            [sub_material, positions, tex_coords, indices] = meshes[0]
-            faces = [indices[i:i + 3] for i in range(0, len(indices), 3)]
+            [sub_material, positions, tex_coords, faces] = meshes[0]
 
             me = bpy.data.meshes.new(name)
             me.from_pydata(positions, [], faces)
             corrections = me.validate(verbose=True, clean_customdata=True)
+            print(f'Object: {name}, Correction: {corrections}') if corrections else None
 
             uv_layer = me.uv_layers.new(do_init=False)  # Returns the created uv layer
             vert_uvs = tex_coords
