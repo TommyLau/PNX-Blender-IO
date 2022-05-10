@@ -101,14 +101,15 @@ class BWXBlender:
             [_, _, _, _, texture_file] = materials[sub_material]
             img = load_image(texture_file, self.import_path, recursive=True, verbose=True, check_existing=True)
 
-            # Add texture for material
-            ma_wrap.base_color_texture.image = img
-            ma_wrap.base_color_texture.texcoords = 'UV'
+            if img:
+                # Add texture for material
+                ma_wrap.base_color_texture.image = img
+                ma_wrap.base_color_texture.texcoords = 'UV'
 
-            # Add alpha blending if the texture is 32bits
-            if img.depth == 32:
-                ma_wrap.alpha_texture.image = img
-                ma_wrap.alpha_texture.texcoords = 'UV'
+                # Add alpha blending if the texture is 32bits
+                if img.depth == 32:
+                    ma_wrap.alpha_texture.image = img
+                    ma_wrap.alpha_texture.texcoords = 'UV'
 
             context_material = ma
             context_mat_wrap = ma_wrap
