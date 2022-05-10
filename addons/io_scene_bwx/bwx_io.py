@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import pathlib
 from io_scene_bwx.bwx_construct import *
 
 BYPASS_OBJECT_NAMES = ['EV_', 'EP_', '@', 'SFX', 'billboard']
@@ -28,6 +28,7 @@ class BWXImporter:
 
     def __init__(self, filename, import_settings):
         """initialization."""
+        self.materials = []
         self.model = []
         self.filename = filename
         self.import_settings = import_settings
@@ -83,3 +84,20 @@ class BWXImporter:
             elif head.version == EnumIntegerString('SLv2'):
                 # TODO
                 pass
+
+            # Process Materials
+            texture_path = pathlib.Path(self.filename).parent.joinpath('../TGA')
+            mtrl = get_block(bwx, "MTRL")
+            for m in mtrl.material:
+                name = m.material_name.value
+                sub_materials = []
+                for sm in m.sub_material:
+                    sub_materials.append([
+                        sm.diffuse.value,
+                        sm.ambient.value,
+                        sm.specular.value,
+                        sm.highlight.value,
+                        str(texture_path.joinpath(
+                            pathlib.PureWindowsPath(sm.texture.filename.value).name).resolve()) if sm.texture else None
+                    ])
+                self.materials.append([name, sub_materials])

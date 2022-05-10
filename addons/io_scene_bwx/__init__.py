@@ -29,6 +29,7 @@ bl_info = {
 #
 if "bpy" in locals():
     import importlib
+
     if "bwx_construct" in locals():
         importlib.reload(bwx_construct)
     if "bwx_io" in locals():
@@ -96,7 +97,7 @@ class ImportBWX(Operator, ImportHelper):
     def unit_import(self, filename, import_settings):
         import time
         from io_scene_bwx.bwx_io import BWXImporter, ImportError
-        from io_scene_bwx.bwx_blender import BlenderBWX
+        from io_scene_bwx.bwx_blender import BWXBlender
 
         try:
             bwx_importer = BWXImporter(filename, import_settings)
@@ -106,7 +107,8 @@ class ImportBWX(Operator, ImportHelper):
             print("Data are loaded, start creating Blender stuff")
 
             start_time = time.time()
-            BlenderBWX.create(bwx_importer)
+            bwx_blender = BWXBlender(bwx_importer)
+            bwx_blender.create()
             elapsed_s = "{:.2f}s".format(time.time() - start_time)
             print("BWX import finished in " + elapsed_s)
 

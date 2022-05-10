@@ -213,7 +213,7 @@ bwx_sub_material_struct = Struct(
     "highlight" / bwx_value,
     "most_1" / bwx_value,
     "unknown" / bwx_value,
-    "filename" / If(this.count > 8, bwx_texture_struct)
+    "texture" / If(this.count > 8, bwx_texture_struct)
 )
 
 bwx_material_struct = Struct(

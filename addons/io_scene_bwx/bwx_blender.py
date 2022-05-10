@@ -14,25 +14,34 @@
 
 
 import bpy
+from bpy_extras.image_utils import load_image
 from mathutils import Vector, Quaternion, Matrix
 
 
-class BlenderBWX:
+class BWXBlender:
     """Main BWX import class."""
 
-    @staticmethod
-    def create(bwx):
-        """Create BWX main worker method."""
-        BlenderBWX.prepare_data(bwx)
+    def __init__(self, bwx):
+        self.nodal_material_wrap_map = {}
+        self.unique_materials = {}
+        self.bwx = bwx
 
-        for o in bwx.model:
+    def create(self):
+        """Create BWX main worker method."""
+        self.prepare_data()
+
+        for o in self.bwx.model:
             [name, material, meshes, matrices] = o
             [sub_material, positions, tex_coords, faces] = meshes[0]
 
+            # Material
+            mat = self.create_material(material, sub_material)
+
             me = bpy.data.meshes.new(name)
+            me.materials.append(mat)
             me.from_pydata(positions, [], faces)
             corrections = me.validate(verbose=True, clean_customdata=True)
-            print(f'Object: {name}, Correction: {corrections}') if corrections else None
+            print(f'Object: {name}, Correction!!!') if corrections else None
 
             uv_layer = me.uv_layers.new(do_init=False)  # Returns the created uv layer
             vert_uvs = tex_coords
@@ -66,30 +75,35 @@ class BlenderBWX:
             new_object.matrix_basis = mat
             bpy.context.collection.objects.link(new_object)
 
-    @staticmethod
-    def prepare_data(bwx):
+    def prepare_data(self):
         """Prepare data, just before creation."""
-        if bwx.model:
-            print(bwx.model)
+        # print(self.bwx.materials)
+        pass
 
-    @staticmethod
-    def find_unused_name(haystack, desired_name):
-        """Finds a name not in haystack and <= 63 UTF-8 bytes.
-        (the limit on the size of a Blender name.)
-        If a is taken, tries a.001, then a.002, etc.
-        """
-        stem = desired_name[:63]
-        suffix = ''
-        cntr = 1
-        while True:
-            name = stem + suffix
+    def create_material(self, material, sub_material):
+        from bpy_extras import node_shader_utils
 
-            if len(name.encode('utf-8')) > 63:
-                stem = stem[:-1]
-                continue
+        [material_name, materials] = self.bwx.materials[material]
+        context_material_key = f'{material}-{sub_material}'
 
-            if name not in haystack:
-                return name
+        context_material = self.unique_materials.get(context_material_key)
+        if context_material is not None:
+            context_mat_wrap = self.nodal_material_wrap_map[context_material]
+        else:
+            ma_name = material_name
+            ma = self.unique_materials[context_material_key] = bpy.data.materials.new(ma_name)
+            ma_wrap = node_shader_utils.PrincipledBSDFWrapper(ma, is_readonly=False)
+            self.nodal_material_wrap_map[ma] = ma_wrap
+            ma_wrap.use_nodes = True
 
-            suffix = '.%03d' % cntr
-            cntr += 1
+            [_, _, _, _, texture_file] = materials[sub_material]
+            img = load_image(texture_file, verbose=True, check_existing=True)
+
+            # Add texture for material
+            ma_wrap.base_color_texture.image = img
+            ma_wrap.base_color_texture.texcoords = 'UV'
+
+            context_material = ma
+            context_mat_wrap = ma_wrap
+
+        return context_material
