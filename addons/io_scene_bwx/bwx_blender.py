@@ -66,6 +66,7 @@ class BWXBlender:
                 new_object.matrix_basis = mat
 
             bpy.context.collection.objects.link(new_object)
+            new_object.select_set(True)
 
     def prepare_data(self):
         """Prepare data, just before creation."""
