@@ -82,8 +82,46 @@ class BWXImporter:
                     self.model.append([name, material, meshes, matrices])
 
             elif head.version == EnumIntegerString('SLv2'):
-                # TODO
-                pass
+                # Version 2
+                dx_obj = get_block(bwx, "SPOB")
+
+                for o in dx_obj.object:
+                    # Object
+                    name = o.name.value
+                    material = o.material.value
+
+                    if any(name.startswith(n) for n in BYPASS_OBJECT_NAMES):
+                        # FIXME: Enable later when process with collision detection and etc.
+                        continue
+
+                    # Only process one sub_mesh (no vertex animation support)
+                    # TODO: Support vertex animation
+                    meshes = []
+
+                    for m in o.mesh:
+                        # Version 2 use one int to represent the sub_material value
+                        sub_material = m.sub_material.value
+                        sm = m.sub_mesh[0]
+                        # There are two more vertices which are unknown, remember to write two more back when exporting
+                        vertex_buffer = Array(sm.vertex_count.value, bwx_dx_vertex_struct).parse(
+                            sm.vertex_buffer.value)
+                        positions = [v.positions[:] for v in vertex_buffer]
+                        _normals = [v.normals[:] for v in vertex_buffer]  # Unused right now
+                        tex_coords = [[v.tex_coords[0], 1 - v.tex_coords[1]] for v in vertex_buffer]
+                        indices = iter(Array(m.index_count.value, Int16ul).parse(m.index_buffer.value))
+                        # Flip if direction = "MSHX"
+                        flip = o.direction.value == EnumIntegerString('MSHX')
+                        faces = [(a, c, b) if flip else (a, b, c) for a, b, c in zip(indices, indices, indices)]
+
+                        meshes.append([sub_material, positions, tex_coords, faces])
+
+                    # Assume have only ONE matrix group - o.matrix[0]
+                    matrices = [[m.timeline, m.matrix[:]] for m in o.matrix[0].matrices]
+
+                    # Insert object into model
+                    self.model.append([name, material, meshes, matrices])
+            else:
+                raise ImportError("Unsupported version")
 
             # Process Materials
             texture_path = pathlib.Path(self.filename).parent.joinpath('../TGA')

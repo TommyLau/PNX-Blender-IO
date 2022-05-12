@@ -234,7 +234,7 @@ bwx_material_struct = Struct(
 # ------------------------------------------------------------
 
 # ------------------------------------------------------------
-# Objects
+# Objects - Version 1
 # ------------------------------------------------------------
 bwx_matrix_struct = Struct(
     "A" / Const(b'A'),  # Array
@@ -248,9 +248,6 @@ bwx_matrix_struct = Struct(
     )),
 )
 
-# ************************************************************
-# Version 1
-# ************************************************************
 bwx_meshf_struct = Struct(
     "A" / Const(b'A'),  # Array
     "size" / VarInt,
@@ -317,9 +314,29 @@ bwx_object_struct = Struct(
         "whatisthis" / If(this.count > 10, bwx_value),
     )),
 )
-# ************************************************************
-# Version 2
-# ************************************************************
+
+# ------------------------------------------------------------
+# Objects - Version 2
+# ------------------------------------------------------------
+bwx_matrix2_struct = Struct(
+    "A" / Const(b'A'),  # Array
+    "size" / VarInt,
+    "count" / VarInt,
+    "MATRIX" / Const(bwx_value.build(dict(type=SL_STRING, data="MATRIX"))),  # MATRIX
+    "matrices" / Array(this.count - 1, Struct(
+        "type" / Const(b'\xe0'),
+        "timeline" / Int32ul,
+        "matrix" / Array(16, Float32l),
+        "unknown" / Array(7, Float32l),
+    )),
+)
+
+bwx_dx_vertex_struct = Struct(
+    "positions" / Array(3, Float32l),
+    "normals" / Array(3, Float32l),
+    "tex_coords" / Array(2, Float32l),
+)
+
 bwx_dx_meshf_struct = Struct(
     "A" / Const(b'A'),  # Array
     "size" / VarInt,
@@ -368,7 +385,7 @@ bwx_dx_object_struct = Struct(
         "A" / Const(b'A'),  # Array
         "matrix_size" / VarInt,
         "matrix_count" / VarInt,
-        "matrix" / Array(this.matrix_count, bwx_matrix_struct),
+        "matrix" / Array(this.matrix_count, bwx_matrix2_struct),
         "sfx" / bwx_value,
         "whatisthis" / If(this.count > 10, bwx_value),
     )),
