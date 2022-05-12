@@ -35,7 +35,7 @@ class BWXBlender:
 
         for o in self.bwx.model:
             [name, material, meshes, matrices] = o
-            [sub_material, positions, tex_coords, faces] = meshes[0]
+            [sub_material, positions, _normals, tex_coords, faces] = meshes[0]
 
             # Material
             mat = self.create_material(material, sub_material)
@@ -51,8 +51,9 @@ class BWXBlender:
             uv_layer.data.foreach_set("uv",
                                       [uv for pair in [vert_uvs[l.vertex_index] for l in me.loops] for uv in pair])
 
-            me.calc_normals()
-            me.update()
+            me.calc_normals_split()
+            me.polygons.foreach_set("use_smooth", [True] * len(me.polygons))
+            me.update(calc_edges=True)
             new_object = bpy.data.objects.new(name, me)
 
             # Try matrix
