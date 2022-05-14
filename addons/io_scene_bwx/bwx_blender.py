@@ -30,6 +30,7 @@ class BWXBlender:
         self.bwx = bwx
         import_path = [p for p in pathlib.Path(bwx.filename).parents if p.stem == "Graphic"]
         self.import_path = str(import_path[0].resolve()) if import_path else ''
+        self.animation = pathlib.Path(bwx.filename).stem.split('_')[-1].lower()
 
     def create(self):
         """Create BWX main worker method."""
@@ -67,14 +68,18 @@ class BWXBlender:
             # Matrix Animation
             if matrices:
                 ob.rotation_mode = "QUATERNION"
-                ob.animation_data_create()
-                action = ob.animation_data.action = bpy.data.actions.new(name)
+                ad = ob.animation_data_create()
+                action = ob.animation_data.action = bpy.data.actions.new(f'{name}_Action')
                 for [timeline, matrix] in matrices:
                     kf = timeline / TIMELINE_BASE
                     (ob.location, ob.rotation_quaternion, ob.scale) = set_matrix(matrix).decompose()
                     ob.keyframe_insert(data_path='location', frame=kf)
                     ob.keyframe_insert(data_path='rotation_quaternion', frame=kf)
                     ob.keyframe_insert(data_path='scale', frame=kf)
+                if action:
+                    track = ad.nla_tracks.new()
+                    track.name = self.animation
+                    _strip = track.strips.new(action.name, 1, action)
 
             bpy.context.collection.objects.link(ob)
             ob.select_set(True)
