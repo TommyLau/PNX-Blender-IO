@@ -18,6 +18,8 @@ import pathlib
 from bpy_extras.image_utils import load_image
 from mathutils import Vector, Quaternion, Matrix
 
+TIMELINE_BASE = 160
+
 
 class BWXBlender:
     """Main BWX import class."""
@@ -32,6 +34,12 @@ class BWXBlender:
     def create(self):
         """Create BWX main worker method."""
         self.prepare_data()
+
+        def set_matrix(matrix):
+            mat = Matrix()
+            for i in range(4):
+                mat.col[i] = [matrix[j] for j in range(i * 4, (i + 1) * 4)]
+            return mat
 
         for o in self.bwx.model:
             [name, material, meshes, matrices] = o
@@ -54,19 +62,22 @@ class BWXBlender:
             me.calc_normals_split()
             me.polygons.foreach_set("use_smooth", [True] * len(me.polygons))
             me.update(calc_edges=True)
-            new_object = bpy.data.objects.new(name, me)
+            ob = bpy.data.objects.new(name, me)
 
-            # Try matrix
+            # Matrix Animation
             if matrices:
-                [timeline, matrix] = matrices[0]
-                mat = Matrix()
-                for i in range(4):
-                    mat.col[i] = [matrix[j] for j in range(i * 4, (i + 1) * 4)]
+                ob.rotation_mode = "QUATERNION"
+                ob.animation_data_create()
+                action = ob.animation_data.action = bpy.data.actions.new(name)
+                for [timeline, matrix] in matrices:
+                    kf = timeline / TIMELINE_BASE
+                    (ob.location, ob.rotation_quaternion, ob.scale) = set_matrix(matrix).decompose()
+                    ob.keyframe_insert(data_path='location', frame=kf)
+                    ob.keyframe_insert(data_path='rotation_quaternion', frame=kf)
+                    ob.keyframe_insert(data_path='scale', frame=kf)
 
-                new_object.matrix_basis = mat
-
-            bpy.context.collection.objects.link(new_object)
-            new_object.select_set(True)
+            bpy.context.collection.objects.link(ob)
+            ob.select_set(True)
 
     def prepare_data(self):
         """Prepare data, just before creation."""
