@@ -64,35 +64,34 @@ class BWXImporter:
                     # FIXME: Enable later when process with collision detection and etc.
                     continue
 
-                # Only process one sub_mesh (no vertex animation support)
-                # TODO: Support vertex animation
                 meshes = []
-
                 for m in o.mesh:
-                    sm = m.sub_mesh[0]
-                    if sl_version == 1:
-                        # Only retrieve the first face's sub material id as texture for whole mesh
-                        sub_material = m.sub_material[0].value
-                        positions = [Array(3, Float32l).parse(v.value)[:] for v in sm.vertex_buffer]
-                        normals = []
-                        tex_coords = [Array(2, Float32l).parse(u.value)[:] for u in sm.uv_buffer]
-                        indices = iter([i.value for i in m.index_buffer])
-                    else:
-                        # Version 2 use one int to represent the sub_material value
-                        sub_material = m.sub_material.value
-                        # There are two more vertices which are unknown, remember to write two more back when exporting
-                        vertex_buffer = Array(sm.vertex_count.value, bwx_dx_vertex_struct).parse(
-                            sm.vertex_buffer.value)
-                        positions = [v.positions[:] for v in vertex_buffer]
-                        normals = [v.normals[:] for v in vertex_buffer]  # Unused right now
-                        tex_coords = [[v.tex_coords[0], 1 - v.tex_coords[1]] for v in vertex_buffer]
-                        indices = iter(Array(m.index_count.value, Int16ul).parse(m.index_buffer.value))
+                    for sm in m.sub_mesh:
+                        if sl_version == 1:
+                            # Only retrieve the first face's sub material id as texture for whole mesh
+                            sub_material = m.sub_material[0].value
+                            positions = [Array(3, Float32l).parse(v.value)[:] for v in sm.vertex_buffer]
+                            normals = []
+                            tex_coords = [Array(2, Float32l).parse(u.value)[:] for u in sm.uv_buffer]
+                            indices = iter([i.value for i in m.index_buffer])
+                        else:
+                            # Version 2 use one int to represent the sub_material value
+                            sub_material = m.sub_material.value
+                            # There are two more vertices which are unknown
+                            # Remember to write two more back when exporting
+                            vertex_buffer = Array(sm.vertex_count.value, bwx_dx_vertex_struct).parse(
+                                sm.vertex_buffer.value)
+                            positions = [v.positions[:] for v in vertex_buffer]
+                            normals = [v.normals[:] for v in vertex_buffer]  # Unused right now
+                            tex_coords = [[v.tex_coords[0], 1 - v.tex_coords[1]] for v in vertex_buffer]
+                            indices = iter(Array(m.index_count.value, Int16ul).parse(m.index_buffer.value))
 
-                    # Flip if direction = "MSHX"
-                    flip = o.direction.value == EnumIntegerString('MSHX')
-                    faces = [(a, c, b) if flip else (a, b, c) for a, b, c in zip(indices, indices, indices)]
+                        # Flip if direction = "MSHX"
+                        flip = o.direction.value == EnumIntegerString('MSHX')
+                        faces = [(a, c, b) if flip else (a, b, c) for a, b, c in zip(indices, indices, indices)]
+                        timeline = sm.timeline.value
 
-                    meshes.append([sub_material, positions, normals, tex_coords, faces])
+                        meshes.append([timeline, sub_material, positions, normals, tex_coords, faces])
 
                 # Assume have only ONE matrix group - o.matrix[0]
                 matrices = [[m.timeline, m.matrix[:]] for m in o.matrix[0].matrices]

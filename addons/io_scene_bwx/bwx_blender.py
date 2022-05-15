@@ -44,26 +44,33 @@ class BWXBlender:
 
         for o in self.bwx.model:
             [name, material, meshes, matrices] = o
-            [sub_material, positions, _normals, tex_coords, faces] = meshes[0]
+            [_, sub_material, positions, _normals, tex_coords, faces] = meshes[0]
 
             # Material
             mat = self.create_material(material, sub_material)
 
+            # Mesh
             me = bpy.data.meshes.new(name)
             me.materials.append(mat)
-            me.from_pydata(positions, [], faces)
-            corrections = me.validate(verbose=True, clean_customdata=True)
-            print(f'Object: {name}, Correction!!!') if corrections else None
+            self.create_mesh(me, positions, tex_coords, faces)
 
-            uv_layer = me.uv_layers.new(do_init=False)  # Returns the created uv layer
-            vert_uvs = tex_coords
-            uv_layer.data.foreach_set("uv",
-                                      [uv for pair in [vert_uvs[l.vertex_index] for l in me.loops] for uv in pair])
-
-            me.calc_normals_split()
-            me.polygons.foreach_set("use_smooth", [True] * len(me.polygons))
-            me.update(calc_edges=True)
+            # Object
             ob = bpy.data.objects.new(name, me)
+
+            # Vertex Animation
+            if len(meshes) > 1:
+                for [timeline, _, positions, _, _, faces] in meshes:
+                    # Update mesh
+                    self.create_mesh(me, positions, tex_coords, faces)
+
+                    # Create new shape key
+                    n = timeline / TIMELINE_BASE
+                    sk = ob.shape_key_add(name=f'Frame {n}', from_mix=False)
+                    sk.interpolation = 'KEY_LINEAR'
+                    ob.data.shape_keys.eval_time = n * 10
+                    ob.data.shape_keys.keyframe_insert(data_path='eval_time', frame=n)
+
+                ob.data.shape_keys.use_relative = False
 
             # Matrix Animation
             if matrices:
@@ -87,6 +94,21 @@ class BWXBlender:
     def prepare_data(self):
         """Prepare data, just before creation."""
         print(self.import_path)
+
+    def create_mesh(self, me, positions, tex_coords, faces):
+        me.clear_geometry()
+        me.from_pydata(positions, [], faces)
+        _corrections = me.validate(verbose=True, clean_customdata=True)
+
+        uv_layer = me.uv_layers.new(do_init=False)  # Returns the created uv layer
+        vert_uvs = tex_coords
+        uv_layer.data.foreach_set("uv",
+                                  [uv for pair in [vert_uvs[l.vertex_index] for l in me.loops] for uv in
+                                   pair])
+
+        me.calc_normals_split()
+        me.polygons.foreach_set("use_smooth", [True] * len(me.polygons))
+        me.update(calc_edges=True)
 
     def create_material(self, material, sub_material):
         from bpy_extras import node_shader_utils
