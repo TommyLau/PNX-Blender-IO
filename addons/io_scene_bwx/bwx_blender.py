@@ -88,12 +88,15 @@ class BWXBlender:
                 ob.data.shape_keys.use_relative = False
 
             # Matrix Animation
-            if matrices:
+            if len(matrices) > 1:
                 (ad, action) = create_animation(ob, matrices)
                 if action:
                     track = ad.nla_tracks.new()
                     track.name = self.animation
                     _strip = track.strips.new(action.name, 1, action)
+            else:
+                # Only apply object matrix when there's no animation
+                ob.matrix_basis = set_matrix(matrices[0][1])
 
             bpy.context.collection.objects.link(ob)
             ob.select_set(True)
