@@ -30,6 +30,7 @@ class BWXImporter:
         """initialization."""
         self.materials = []
         self.model = []
+        self.camera = []
         self.filename = filename
         self.import_settings = import_settings
 
@@ -100,7 +101,7 @@ class BWXImporter:
                 self.model.append([name, material, meshes, matrices])
 
             # Process Materials
-            texture_path = pathlib.Path(self.filename).parent.joinpath('../TGA')
+            texture_path = pathlib.Path(self.filename).parent
             mtrl = get_block(bwx, "MTRL")
             for m in mtrl.material:
                 name = m.material_name.value
@@ -115,3 +116,10 @@ class BWXImporter:
                             pathlib.PureWindowsPath(sm.texture.filename.value).name).resolve()) if sm.texture else None
                     ])
                 self.materials.append([name, sub_materials])
+
+            # Process Camera
+            cam = get_block(bwx, "CAM")
+            for c in cam.camera:
+                name = c.name.value
+                matrix = [[m.timeline, m.camera[:]] for m in c.matrix]
+                self.camera.append([name, matrix])

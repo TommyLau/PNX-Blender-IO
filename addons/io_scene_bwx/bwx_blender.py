@@ -18,7 +18,8 @@ import pathlib
 from bpy_extras.image_utils import load_image
 from mathutils import Vector, Quaternion, Matrix
 
-TIMELINE_BASE = 160
+# TIMELINE_BASE = 160  # 24 fps
+TIMELINE_BASE = 32  # 120 fps
 
 
 class BWXBlender:
@@ -41,6 +42,20 @@ class BWXBlender:
             for i in range(4):
                 mat.col[i] = [matrix[j] for j in range(i * 4, (i + 1) * 4)]
             return mat
+
+        def create_animation(ob, matrices):
+            ob.rotation_mode = "QUATERNION"
+            ad = ob.animation_data_create()
+            action = ob.animation_data.action = bpy.data.actions.new(f'{name}_Action')
+
+            for [timeline, matrix] in matrices:
+                kf = timeline / TIMELINE_BASE
+                (ob.location, ob.rotation_quaternion, ob.scale) = set_matrix(matrix).decompose()
+                ob.keyframe_insert(data_path='location', frame=kf)
+                ob.keyframe_insert(data_path='rotation_quaternion', frame=kf)
+                ob.keyframe_insert(data_path='scale', frame=kf)
+
+            return ad, action
 
         for o in self.bwx.model:
             [name, material, meshes, matrices] = o
@@ -74,19 +89,28 @@ class BWXBlender:
 
             # Matrix Animation
             if matrices:
-                ob.rotation_mode = "QUATERNION"
-                ad = ob.animation_data_create()
-                action = ob.animation_data.action = bpy.data.actions.new(f'{name}_Action')
-                for [timeline, matrix] in matrices:
-                    kf = timeline / TIMELINE_BASE
-                    (ob.location, ob.rotation_quaternion, ob.scale) = set_matrix(matrix).decompose()
-                    ob.keyframe_insert(data_path='location', frame=kf)
-                    ob.keyframe_insert(data_path='rotation_quaternion', frame=kf)
-                    ob.keyframe_insert(data_path='scale', frame=kf)
+                (ad, action) = create_animation(ob, matrices)
                 if action:
                     track = ad.nla_tracks.new()
                     track.name = self.animation
                     _strip = track.strips.new(action.name, 1, action)
+
+            bpy.context.collection.objects.link(ob)
+            ob.select_set(True)
+
+        # Camera
+        for [name, matrices] in self.bwx.camera:
+            ca = bpy.data.cameras.new(name)
+            # FOV - 50 - 38.6 mm
+            ca.lens_unit = 'FOV'
+            ca.lens = 38.6
+            ob = bpy.data.objects.new(name, ca)
+            (_, action) = create_animation(ob, matrices)
+
+            if action:
+                for f in action.fcurves:
+                    pass
+                    # f.extrapolation = 'LINEAR'
 
             bpy.context.collection.objects.link(ob)
             ob.select_set(True)

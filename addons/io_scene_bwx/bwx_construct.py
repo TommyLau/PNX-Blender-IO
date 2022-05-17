@@ -394,6 +394,38 @@ bwx_dx_object_struct = Struct(
 # Objects - END
 # ------------------------------------------------------------
 
+# ------------------------------------------------------------
+# Camera
+# ------------------------------------------------------------
+bwx_camera_matrix_struct = Struct(
+    "B" / Const(b'B'),  # Data block
+    "size" / VarInt,
+    "timeline" / Int32ul,
+    "camera" / Array(16, Float32l),
+    "target" / Array(16, Float32l),
+    "unknown1" / Array(3, Float32l),
+    "unknown2" / Array(3, Float32l),
+)
+
+bwx_camera_struct = Struct(
+    "A" / Const(b'A'),  # Array
+    "size" / VarInt,
+    "count" / VarInt,
+    "camera" / Array(this.count, Struct(
+        "A" / Const(b'A'),  # Array
+        "size" / VarInt,
+        "cam_count" / VarInt,
+        "CAM" / Const(bwx_value.build(dict(type=SL_STRING, data="CAM"))),  # CAM
+        "name" / bwx_value,
+        "CAMR" / Const(bwx_value.build(dict(type=SL_I32, data=0x43414d52))),  # CAMR
+        "unknown" / bwx_value,
+        "matrix" / Array(this.cam_count - 4, bwx_camera_matrix_struct),
+    )),
+)
+# ------------------------------------------------------------
+# Camera - END
+# ------------------------------------------------------------
+
 # BWX Main Blocks
 bwx_main_block_struct = Struct(
     "name" / Prefixed(VarInt, CString("utf-8")),
@@ -403,7 +435,7 @@ bwx_main_block_struct = Struct(
         "MTRL": bwx_material_struct,
         "OBJ2": bwx_object_struct,
         "OBJECT": bwx_object_struct,
-        "CAM": bwx_value,  # TODO
+        "CAM": bwx_camera_struct,
         "LIGHT": bwx_value,  # TODO
         "SOUND": bwx_value,  # TODO
         "BONE": bwx_value,  # TODO
