@@ -14,8 +14,7 @@
 
 
 import struct
-from io_scene_bwx.vendor.construct import *
-# from construct import *
+from construct import *
 
 
 def singleton(arg):

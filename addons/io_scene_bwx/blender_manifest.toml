@@ -15,5 +15,7 @@ copyright = ["2022-2026 Tommy Lau @ SLODT"]
 tags = ["Import-Export", "3D View"]
 website = "https://github.com/TommyLau/PNX-Blender-IO"
 
-# Vendored dependencies
-# The construct library is bundled in vendor/ directory
+# Python wheels for dependencies
+wheels = [
+    "./wheels/construct-2.10.70-py3-none-any.whl",
+]

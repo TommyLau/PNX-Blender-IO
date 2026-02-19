@@ -104,7 +104,7 @@ io_scene_bwx/
 ├── operators.py             # Blender operators
 ├── properties.py            # PropertyGroup classes
 ├── logging_utils.py         # Logging configuration
-├── vendor/construct/        # Vendored construct library
+├── wheels/                  # Python wheel dependencies
 └── tests/                   # Unit tests
 ```
 
