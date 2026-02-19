@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 bl_info = {
     "name": "ShiningLore BWX Format",
     "author": "Tommy Lau <tommy.lhg@gmail.com>",
-    "version": (0, 2, 0),
+    "version": (0, 2, 1),
     "blender": (4, 2, 0),
     "location": "File > Import/Export > ShiningLore BWX File",
     "description": "Import/Export BNX/PNX files from ShiningLore Online",
@@ -46,8 +48,6 @@ Debugging:
         3 = INFO
         4+ = DEBUG
 """
-
-from __future__ import annotations
 
 from typing import Final
 
@@ -122,7 +122,8 @@ def unregister() -> None:
 
     # Unregister operator classes in reverse order
     for cls in reversed(_classes):
-        bpy.utils.unregister_class(cls)
+        if hasattr(cls, 'bl_rna'):
+            bpy.utils.unregister_class(cls)
 
     logger.info("Addon unregistered successfully")
 
