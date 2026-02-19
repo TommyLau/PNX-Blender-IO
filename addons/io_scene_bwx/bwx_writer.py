@@ -208,6 +208,9 @@ class BWXWriter:
 
     def _build_bwx_value_int(self, value: int) -> bytes:
         """Build a bwx_value for an integer (type 0x49)."""
+        # Handle negative values (convert signed to unsigned 32-bit)
+        if value < 0:
+            value = value & 0xFFFFFFFF
         return bytes([0x49]) + struct.pack('<I', value)
 
     def _build_bwx_value_compact_int(self, value: int) -> bytes:
@@ -381,8 +384,16 @@ class BWXWriter:
         return bytes(outer)
 
     @staticmethod
-    def _color_to_int(color: tuple) -> int:
-        """Convert color tuple to integer (BGRA format)."""
+    def _color_to_int(color) -> int:
+        """Convert color to integer (BGRA format).
+
+        Handles both integer (already BGRA) and tuple/list formats.
+        """
+        # If already an integer, just return it
+        if isinstance(color, int):
+            return color
+
+        # Convert tuple/list to BGRA integer
         if len(color) >= 4:
             r, g, b, a = int(color[0] * 255), int(color[1] * 255), int(color[2] * 255), int(color[3] * 255)
         else:

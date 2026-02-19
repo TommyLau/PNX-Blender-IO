@@ -647,4 +647,5 @@ class BWXExtractor:
         Returns:
             Flat list of 16 floats in column-major order
         """
-        return [matrix.col[j][i] for i in range(4) for j in range(4)]
+        # Column-major order: [col0_row0, col0_row1, col0_row2, col0_row3, col1_row0, ...]
+        return [matrix.col[i][j] for i in range(4) for j in range(4)]
