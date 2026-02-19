@@ -1,0 +1,73 @@
+name: Build Extension
+
+on:
+  push:
+    branches: [master]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Blender 4.5 LTS
+        run: |
+          sudo apt update
+          sudo apt install -y libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1
+          wget -q https://download.blender.org/release/Blender4.5/blender-4.5.5-linux-x64.tar.xz
+          tar -xf blender-4.5.5-linux-x64.tar.xz
+          echo "$PWD/blender-4.5.5-linux-x64" >> $GITHUB_PATH
+
+      - name: Validate manifest
+        run: |
+          blender --background --command extension validate addons/io_scene_bwx
+
+      - name: Build extension
+        run: |
+          blender --background --command extension build --source-dir addons/io_scene_bwx
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: io_scene_bwx-extension
+          path: io_scene_bwx-*.zip
+          retention-days: 30
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Blender 4.5 LTS
+        run: |
+          sudo apt update
+          sudo apt install -y libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1
+          wget -q https://download.blender.org/release/Blender4.5/blender-4.5.5-linux-x64.tar.xz
+          tar -xf blender-4.5.5-linux-x64.tar.xz
+          echo "$PWD/blender-4.5.5-linux-x64" >> $GITHUB_PATH
+
+      - name: Build extension
+        run: |
+          blender --background --command extension build --source-dir addons/io_scene_bwx
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release v${{ steps.get_version.outputs.VERSION }}
+          files: io_scene_bwx-*.zip
+          generate_release_notes: true
