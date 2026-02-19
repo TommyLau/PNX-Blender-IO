@@ -22,10 +22,20 @@ This addon enables importing 3D models, materials, textures, and animations from
 
 ## Requirements
 
-- **Blender**: 4.0+ (tested with 4.5 LTS)
-- **Python**: 3.10+
+- **Blender**: 4.2+ (tested with 4.5 LTS)
+- **Python**: 3.11+
 
 ## Installation
+
+### Method 1: Extension (Recommended)
+
+1. Download `io_scene_bwx-0.2.0.zip` from [Releases](https://github.com/TommyLau/PNX-Blender-IO/releases)
+2. In Blender, go to **Edit > Preferences > Extensions**
+3. Click the dropdown menu (⋮) and select **Install from Disk**
+4. Select the downloaded zip file
+5. Enable the extension
+
+### Method 2: Legacy (Development)
 
 1. Copy the `addons/io_scene_bwx` folder to Blender's addons directory:
    - **Windows**: `%APPDATA%\Blender Foundation\Blender\4.x\scripts\addons\`
@@ -84,17 +94,18 @@ For development and debugging, see [DEBUGGING.md](DEBUGGING.md) (if available).
 
 ```
 io_scene_bwx/
-├── __init__.py          # Addon entry point
-├── constants.py         # Constants and configuration
-├── types.py             # Dataclasses for data structures
-├── bwx_construct.py     # Binary format definitions
-├── bwx_io.py            # Data importer
-├── bwx_blender.py       # Blender integration
-├── operators.py         # Blender operators
-├── properties.py        # PropertyGroup classes
-├── logging_utils.py     # Logging configuration
-├── vendor/construct/    # Vendored construct library
-└── tests/               # Unit tests
+├── __init__.py              # Addon entry point
+├── blender_manifest.toml    # Extension manifest (Blender 4.2+)
+├── constants.py             # Constants and configuration
+├── types.py                 # Dataclasses for data structures
+├── bwx_construct.py         # Binary format definitions
+├── bwx_io.py                # Data importer
+├── bwx_blender.py           # Blender integration
+├── operators.py             # Blender operators
+├── properties.py            # PropertyGroup classes
+├── logging_utils.py         # Logging configuration
+├── vendor/construct/        # Vendored construct library
+└── tests/                   # Unit tests
 ```
 
 ## Notes
