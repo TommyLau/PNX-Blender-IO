@@ -27,12 +27,14 @@ import time
 from typing import Set
 
 import bpy
-from bpy.props import BoolProperty, CollectionProperty, StringProperty
+from bpy.props import BoolProperty, CollectionProperty, EnumProperty, StringProperty
 from bpy.types import Context, Operator, OperatorFileListElement
-from bpy_extras.io_utils import ImportHelper
+from bpy_extras.io_utils import ImportHelper, ExportHelper
 
 from .bwx_io import BWXImporter, ImportError
 from .bwx_blender import BWXBlender
+from .bwx_extractor import BWXExtractor, ExportError
+from .bwx_writer import BWXWriter, WriterError
 from .logging_utils import get_logger, get_log_level_from_debug_value
 
 
@@ -194,5 +196,176 @@ def menu_func_import(self, context: Context) -> None:
     """
     self.layout.operator(
         ImportBWX.bl_idname,
+        text="ShiningLore BWX File (.BNX/.PNX)"
+    )
+
+
+class ExportBWX(Operator, ExportHelper):
+    """Export ShiningLore BWX file.
+
+    This operator provides the main entry point for exporting Blender
+    scenes to BNX/PNX format.
+    """
+    bl_idname = "export_scene.bwx"
+    bl_label = "Export BWX File"
+    bl_description = "Export scene to ShiningLore BNX/PNX format"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    # File browser filter
+    filename_ext = ".PNX"
+    filter_glob: StringProperty(
+        default="*.BNX;*.PNX",
+        options={'HIDDEN'},
+    )
+
+    # Export options
+    format_version: EnumProperty(
+        name="Format Version",
+        description="Target BWX format version",
+        items=[
+            ('1', "SLv1 (Legacy)", "Version 5.0 - OBJ2/MESH format (older)"),
+            ('2', "SLv2 (Modern)", "Version 6.02 - SPOB/DXMESH format (recommended)"),
+        ],
+        default='2',
+    )
+
+    export_animations: BoolProperty(
+        name="Export Animations",
+        description="Export vertex and matrix animations",
+        default=True,
+    )
+
+    export_cameras: BoolProperty(
+        name="Export Cameras",
+        description="Export camera objects",
+        default=True,
+    )
+
+    use_selection: BoolProperty(
+        name="Selected Objects Only",
+        description="Export only selected objects",
+        default=False,
+    )
+
+    apply_modifiers: BoolProperty(
+        name="Apply Modifiers",
+        description="Apply modifiers before exporting",
+        default=True,
+    )
+
+    copy_textures: BoolProperty(
+        name="Copy Textures",
+        description="Copy texture files to output directory",
+        default=True,
+    )
+
+    def draw(self, context: Context) -> None:
+        """Draw the export options panel.
+
+        Args:
+            context: Blender context
+        """
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        # Format options
+        layout.prop(self, "format_version")
+
+        # Export options
+        layout.prop(self, "export_animations")
+        layout.prop(self, "export_cameras")
+        layout.prop(self, "use_selection")
+        layout.prop(self, "apply_modifiers")
+        layout.prop(self, "copy_textures")
+
+    def execute(self, context: Context) -> Set[str]:
+        """Execute the export operation.
+
+        Args:
+            context: Blender context
+
+        Returns:
+            Set containing 'FINISHED' or 'CANCELLED'
+        """
+        logger = get_logger()
+        logger.setLevel(get_log_level_from_debug_value())
+
+        settings = self.as_keywords()
+
+        try:
+            # Extract data from Blender scene
+            extractor = BWXExtractor(context, settings)
+            extractor.extract()
+
+            # Get format version
+            version = int(settings.get('format_version', '2'))
+
+            # Write to file
+            writer = BWXWriter(extractor.data, version=version)
+            writer.write(self.filepath)
+
+            # Copy textures if requested
+            texture_count = 0
+            if settings.get('copy_textures', True):
+                texture_count = self._copy_textures(extractor.data, self.filepath)
+
+            msg = f"Successfully exported: {os.path.basename(self.filepath)}"
+            if texture_count > 0:
+                msg += f" ({texture_count} textures)"
+            self.report({'INFO'}, msg)
+            return {'FINISHED'}
+
+        except ExportError as e:
+            logger.error(f"Export failed: {e}")
+            self.report({'ERROR'}, str(e))
+            return {'CANCELLED'}
+        except WriterError as e:
+            logger.error(f"Write failed: {e}")
+            self.report({'ERROR'}, str(e))
+            return {'CANCELLED'}
+        except Exception as e:
+            logger.exception("Unexpected error during export")
+            self.report({'ERROR'}, f"Export failed: {e}")
+            return {'CANCELLED'}
+
+    def _copy_textures(self, data, filepath: str) -> int:
+        """Copy texture files to output directory.
+
+        Args:
+            data: BWXData with material information
+            filepath: Output PNX file path
+
+        Returns:
+            Number of textures copied
+        """
+        import shutil
+
+        output_dir = pathlib.Path(filepath).parent
+        copied = set()
+        count = 0
+
+        for mat in data.materials:
+            for sub_mat in mat.sub_materials:
+                if sub_mat.texture_path:
+                    src_path = pathlib.Path(sub_mat.texture_path)
+                    if src_path.exists() and src_path.name not in copied:
+                        dst_path = output_dir / src_path.name
+                        if not dst_path.exists():
+                            shutil.copy2(src_path, dst_path)
+                            count += 1
+                        copied.add(src_path.name)
+
+        return count
+
+
+def menu_func_export(self, context: Context) -> None:
+    """Add export menu entry.
+
+    Args:
+        context: Blender context (unused)
+    """
+    self.layout.operator(
+        ExportBWX.bl_idname,
         text="ShiningLore BWX File (.BNX/.PNX)"
     )

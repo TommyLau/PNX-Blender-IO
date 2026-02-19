@@ -100,6 +100,39 @@ def get_block(bwx, name):
     return a[0] if len(a) > 0 else None
 
 
+# ------------------------------------------------------------
+# Build helper functions for export
+# ------------------------------------------------------------
+def build_bwx_value_int(value: int) -> dict:
+    """Build a bwx_value for an integer (type 0x49)."""
+    return {'type': SL_I32, 'data': value}
+
+
+def build_bwx_value_string(value: str) -> dict:
+    """Build a bwx_value for a string (type 0x53)."""
+    return {'type': SL_STRING, 'data': value.encode('euc-kr') + b'\x00'}
+
+
+def build_bwx_value_byte(value: int) -> dict:
+    """Build a bwx_value for a byte (type 0x59)."""
+    return {'type': 0x59, 'data': value}
+
+
+def build_bwx_value_float(value: float) -> dict:
+    """Build a bwx_value for a float (type 0x46)."""
+    return {'type': 0x46, 'data': value}
+
+
+def build_bwx_value_data(data: bytes) -> dict:
+    """Build a bwx_value for raw data (type 0x42)."""
+    return {'type': 0x42, 'data': data}
+
+
+def build_bwx_value_block(marker: int, data: bytes) -> dict:
+    """Build a bwx_value for inline block data (type 0x80+)."""
+    return {'type': 0x80 | (marker & 0x7F), 'data': data}
+
+
 # Add Korean EUC-KR support
 possiblestringencodings["euc_kr"] = 1
 

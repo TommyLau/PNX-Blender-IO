@@ -348,10 +348,13 @@ class BWXImporter:
             bwx_dx_vertex_struct
         ).parse(sm.vertex_buffer.value)
 
-        positions = [v.positions[:] for v in vertex_buffer]
-        normals = [v.normals[:] for v in vertex_buffer]
+        # Exclude the last 2 dummy vertices (SLv2 format adds 2 extra vertices)
+        actual_vertex_count = len(vertex_buffer) - 2 if len(vertex_buffer) > 2 else len(vertex_buffer)
+
+        positions = [v.positions[:] for v in vertex_buffer[:actual_vertex_count]]
+        normals = [v.normals[:] for v in vertex_buffer[:actual_vertex_count]]
         # Flip UV y-coordinate for v2
-        tex_coords = [[v.tex_coords[0], 1 - v.tex_coords[1]] for v in vertex_buffer]
+        tex_coords = [[v.tex_coords[0], 1 - v.tex_coords[1]] for v in vertex_buffer[:actual_vertex_count]]
         indices = iter(Array(m.index_count.value, Int16ul).parse(m.index_buffer.value))
 
         # Flip if direction = "MSHX"

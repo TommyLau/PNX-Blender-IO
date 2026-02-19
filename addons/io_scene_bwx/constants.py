@@ -40,3 +40,28 @@ BWX_ENDING: Final[bytes] = b"FXWB"
 
 # SLBWX signature
 SLBWX_SIGNATURE: Final[str] = "SLBWX"
+
+# Export-specific constants
+# Version codes
+DEFAULT_VERSION_SLV1: Final[int] = 0x0500  # Version 5.0
+DEFAULT_VERSION_SLV2: Final[int] = 0x0602  # Version 6.02
+
+# Matrix markers
+MATRIX_MARKER_SLV1: Final[bytes] = b'\xc4'  # 69 bytes per frame (1 + 4 + 64)
+MATRIX_MARKER_SLV2: Final[bytes] = b'\xe0'  # 97 bytes per frame (1 + 4 + 64 + 28)
+
+# Vertex format (SLv2)
+VERTEX_SIZE_SLV2: Final[int] = 32  # position(12) + normal(12) + uv(8)
+EXTRA_VERTICES_SLV2: Final[int] = 2  # Extra dummy vertices in SLv2
+
+# Direction flags
+DIRECTION_MNHX: Final[int] = 0x4d4e4858  # Normal face winding
+DIRECTION_MSHX: Final[int] = 0x4d534858  # Reversed face winding
+
+# Magic values
+PNX_MAGIC: Final[int] = 0x504e5800  # "PNX\0"
+CAMR_MAGIC: Final[int] = 0x43414d52  # "CAMR"
+
+# Default export values
+DEFAULT_DESCRIPTION: Final[str] = "[BWX PNX KAK]"
+DEFAULT_FILE_TYPE: Final[int] = 1  # Unknown field in header

@@ -49,6 +49,8 @@ if "bpy" in locals():
         'bwx_construct',
         'bwx_io',
         'bwx_blender',
+        'bwx_extractor',
+        'bwx_writer',
         'operators',
         'properties',
         'logging_utils',
@@ -68,6 +70,7 @@ from .logging_utils import get_logger, setup_logging
 # Classes to register
 _classes = (
     operators.ImportBWX,
+    operators.ExportBWX,
 )
 
 
@@ -88,6 +91,7 @@ def register() -> None:
 
     # Add menu entry
     bpy.types.TOPBAR_MT_file_import.append(operators.menu_func_import)
+    bpy.types.TOPBAR_MT_file_export.append(operators.menu_func_export)
 
     logger.info("Addon registered successfully")
 
@@ -102,6 +106,7 @@ def unregister() -> None:
 
     # Remove menu entry
     bpy.types.TOPBAR_MT_file_import.remove(operators.menu_func_import)
+    bpy.types.TOPBAR_MT_file_export.remove(operators.menu_func_export)
 
     # Unregister operator classes in reverse order
     for cls in reversed(_classes):
