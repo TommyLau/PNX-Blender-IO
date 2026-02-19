@@ -2,9 +2,9 @@
 
 import struct, io, binascii, itertools, collections, pickle, sys, os, hashlib, importlib, importlib.machinery, importlib.util
 
-from io_scene_bwx.construct.lib import *
-from io_scene_bwx.construct.expr import *
-from io_scene_bwx.construct.version import *
+from io_scene_bwx.vendor.construct.lib import *
+from io_scene_bwx.vendor.construct.expr import *
+from io_scene_bwx.vendor.construct.version import *
 
 
 #===============================================================================

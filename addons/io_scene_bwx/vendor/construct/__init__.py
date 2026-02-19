@@ -19,11 +19,11 @@ Hands-on example:
     b"\x01\x02\x03"
 """
 
-from io_scene_bwx.construct.core import *
-from io_scene_bwx.construct.expr import *
-from io_scene_bwx.construct.debug import *
-from io_scene_bwx.construct.version import *
-from io_scene_bwx.construct import lib
+from io_scene_bwx.vendor.construct.core import *
+from io_scene_bwx.vendor.construct.expr import *
+from io_scene_bwx.vendor.construct.debug import *
+from io_scene_bwx.vendor.construct.version import *
+from io_scene_bwx.vendor.construct import lib
 
 
 #===============================================================================

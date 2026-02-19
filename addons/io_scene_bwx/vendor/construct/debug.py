@@ -1,5 +1,5 @@
-from io_scene_bwx.construct import *
-from io_scene_bwx.construct.lib import *
+from io_scene_bwx.vendor.construct import *
+from io_scene_bwx.vendor.construct.lib import *
 import sys, traceback, pdb, inspect
 
 

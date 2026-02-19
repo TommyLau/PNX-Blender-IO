@@ -14,7 +14,7 @@
 
 
 import struct
-from io_scene_bwx.construct import *
+from io_scene_bwx.vendor.construct import *
 # from construct import *
 
 
