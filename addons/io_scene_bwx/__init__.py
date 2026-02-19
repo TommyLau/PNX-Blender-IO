@@ -39,17 +39,6 @@ from __future__ import annotations
 
 from typing import Final
 
-bl_info = {
-    'name': 'ShiningLore BWX Format',
-    'author': 'Tommy Lau',
-    'version': (1, 0, 0),
-    'blender': (4, 0, 0),
-    'location': 'File > Import',
-    'description': 'Import BNX/PNX files from ShiningLore Online',
-    'warning': '',
-    'category': 'Import-Export',
-}
-
 ADDON_NAME: Final = __name__
 
 # Script reloading support (for development)

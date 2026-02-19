@@ -1,0 +1,19 @@
+schema_version = "1.0.0"
+
+id = "io_scene_bwx"
+version = "0.2.0"
+name = "ShiningLore BWX Format"
+tagline = "Import BNX/PNX files from ShiningLore Online"
+maintainer = "Tommy Lau <tommy.lhg@gmail.com>"
+type = "add-on"
+
+blender_version_min = "4.2.0"
+
+license = ["SPDX:GPL-3.0-or-later"]
+copyright = ["2022-2026 Tommy Lau @ SLODT"]
+
+tags = ["Import-Export", "3D View"]
+website = "https://github.com/TommyLau/PNX-Blender-IO"
+
+# Vendored dependencies
+# The construct library is bundled in vendor/ directory
