@@ -12,6 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+bl_info = {
+    "name": "ShiningLore BWX Format",
+    "author": "Tommy Lau <tommy.lhg@gmail.com>",
+    "version": (0, 2, 0),
+    "blender": (4, 2, 0),
+    "location": "File > Import/Export > ShiningLore BWX File",
+    "description": "Import/Export BNX/PNX files from ShiningLore Online",
+    "warning": "",
+    "wiki_url": "https://github.com/TommyLau/PNX-Blender-IO",
+    "category": "Import-Export",
+}
+
 """ShiningLore BWX Format Importer for Blender 4.x.
 
 This addon provides import functionality for ShiningLore Online game files
